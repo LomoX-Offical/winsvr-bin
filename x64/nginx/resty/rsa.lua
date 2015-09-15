@@ -4,7 +4,7 @@ local ffi_cast = ffi.cast
 local ffi_gc = ffi.gc
 local ffi_copy = ffi.copy
 local ffi_str = ffi.string
-local C =   (ffi.os=="Windows" and ffi.load'libeay32' or ffi.C)
+local C = (ffi.os == "Windows" and ffi.load "libeay32" or ffi.C)
 local setmetatable = setmetatable
 
 
