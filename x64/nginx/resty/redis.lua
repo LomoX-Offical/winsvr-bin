@@ -1,20 +1,21 @@
--- Copyright (C) 2012-2013 Yichun Zhang (agentzh), CloudFlare Inc.
+-- Copyright (C) Yichun Zhang (agentzh), CloudFlare Inc.
 
 
 local sub = string.sub
 local byte = string.byte
 local tcp = ngx.socket.tcp
-local concat = table.concat
 local null = ngx.null
+local type = type
 local pairs = pairs
 local unpack = unpack
 local setmetatable = setmetatable
 local tonumber = tonumber
-local error = error
+local tostring = tostring
+--local error = error
 
 
 local ok, new_tab = pcall(require, "table.new")
-if not ok then
+if not ok or type(new_tab) ~= "function" then
     new_tab = function (narr, nrec) return {} end
 end
 
@@ -79,8 +80,7 @@ local commands = {
     "zrem",              "zremrangebyrank",   "zremrangebyscore",
     "zrevrange",         "zrevrangebyscore",  "zrevrank",
     "zscan",
-    "zscore",            "zunionstore",       "evalsha",
-    "pfadd",             "pfcount"
+    "zscore",            "zunionstore",       "evalsha"
 }
 
 
@@ -267,8 +267,9 @@ local function _gen_req(args)
         end
     end
 
-    -- it is faster to do string concatenation on the Lua land
-    return concat(req)
+    -- it is much faster to do string concatenation on the C land
+    -- in real world (large number of strings in the Lua VM)
+    return req
 end
 
 
