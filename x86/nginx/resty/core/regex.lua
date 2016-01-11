@@ -72,7 +72,6 @@ local regex_sub_str_cache = new_tab(0, 4)
 local max_regex_cache_size
 local regex_cache_size = 0
 local script_engine
-local tmp_captures = new_tab(4, 4)
 
 
 ffi.cdef[[
@@ -468,13 +467,13 @@ local function new_script_engine(subj, compiled, count)
 end
 
 
-local function check_buf_size(buf, buf_size, pos, len, new_len)
+local function check_buf_size(buf, buf_size, pos, len, new_len, must_alloc)
     if new_len > buf_size then
         buf_size = buf_size * buf_grow_ratio
         if buf_size < new_len then
             buf_size = new_len
         end
-        local new_buf = get_string_buf(buf_size)
+        local new_buf = get_string_buf(buf_size, must_alloc)
         ffi_copy(new_buf, buf, len)
         buf = new_buf
         pos = buf + len
@@ -601,7 +600,10 @@ local function re_sub_func_helper(subj, regex, replace, opts, global)
     local cp_pos = 0
 
     local dst_buf_size = get_string_buf_size()
-    local dst_buf = get_string_buf(dst_buf_size)
+    -- Note: we have to always allocate the string buffer because
+    -- the user might call whatever resty.core's API functions recursively
+    -- in the user callback function.
+    local dst_buf = get_string_buf(dst_buf_size, true)
     local dst_pos = dst_buf
     local dst_len = 0
 
@@ -633,7 +635,7 @@ local function re_sub_func_helper(subj, regex, replace, opts, global)
         count = count + 1
         local prefix_len = compiled.captures[0] - cp_pos
 
-        local res = collect_captures(compiled, rc, subj, flags, tmp_captures)
+        local res = collect_captures(compiled, rc, subj, flags)
 
         local bit = replace(res)
         local bit_len = #bit
@@ -641,7 +643,7 @@ local function re_sub_func_helper(subj, regex, replace, opts, global)
         local new_dst_len = dst_len + prefix_len + bit_len
         dst_buf, dst_buf_size, dst_pos, dst_len =
             check_buf_size(dst_buf, dst_buf_size, dst_pos, dst_len,
-                           new_dst_len)
+                           new_dst_len, true)
 
         if prefix_len > 0 then
             ffi_copy(dst_pos, ffi_cast(c_str_type, subj) + cp_pos,
@@ -679,7 +681,7 @@ local function re_sub_func_helper(subj, regex, replace, opts, global)
             local new_dst_len = dst_len + suffix_len
             dst_buf, dst_buf_size, dst_pos, dst_len =
                 check_buf_size(dst_buf, dst_buf_size, dst_pos, dst_len,
-                               new_dst_len)
+                               new_dst_len, true)
 
             ffi_copy(dst_pos, ffi_cast(c_str_type, subj) + cp_pos,
                      suffix_len)

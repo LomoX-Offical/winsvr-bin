@@ -17,9 +17,9 @@ local FREE_LIST_REF = 0
 
 if not ngx.config
    or not ngx.config.ngx_lua_version
-   or ngx.config.ngx_lua_version < 9011
+   or ngx.config.ngx_lua_version < 9017
 then
-    error("ngx_lua 0.9.11+ required")
+    error("ngx_lua 0.9.17+ required")
 end
 
 
@@ -94,10 +94,10 @@ end
 local c_buf_type = ffi.typeof("char[?]")
 
 
-local _M = new_tab(0, 15)
+local _M = new_tab(0, 16)
 
 
-_M.version = "0.0.9"
+_M.version = "0.1.1"
 _M.new_tab = new_tab
 _M.clear_tab = clear_tab
 
@@ -143,9 +143,9 @@ function _M.get_size_ptr()
 end
 
 
-function _M.get_string_buf(size)
+function _M.get_string_buf(size, must_alloc)
     -- ngx.log(ngx.ERR, "str buf size: ", str_buf_size)
-    if size > str_buf_size then
+    if size > str_buf_size or must_alloc then
         return ffi_new(c_buf_type, size)
     end
 
@@ -179,6 +179,7 @@ _M.FFI_OK = 0
 _M.FFI_NO_REQ_CTX = -100
 _M.FFI_BAD_CONTEXT = -101
 _M.FFI_ERROR = -1
+_M.FFI_BUSY = -3
 _M.FFI_DONE = -4
 _M.FFI_DECLINED = -5
 
