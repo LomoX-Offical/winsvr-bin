@@ -124,10 +124,10 @@ function _M.lock(self, key)
 
     local dict = self.dict
     local cdata = self.cdata
-    local exptime = self.exptime
     if cdata.key_id > 0 then
         return nil, "locked"
     end
+    local exptime = self.exptime
     local ok, err = dict:add(key, true, exptime)
     if ok then
         cdata.key_id = ref_obj(key)
@@ -183,21 +183,6 @@ function _M.lock(self, key)
     return nil, "timeout"
 end
 
-function _M.update(self, key)
-    if not key then
-        return false, "nil key"
-    end
-
-    local dict = self.dict
-    local cdata = self.cdata
-    local exptime = self.exptime
-    if cdata.key_id > 0 then
-        dict:set(key, true, exptime)
-        return true
-    end
-
-    return false, "the lock has been release"
-end
 
 function _M.unlock(self)
     local dict = self.dict
