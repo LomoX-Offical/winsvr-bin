@@ -10,6 +10,7 @@ local byte = string.byte
 local find = string.find
 local gsub = string.gsub
 local sub = string.sub
+local rep = string.rep
 local format = string.format
 local band = bit.band
 local rshift = bit.rshift
@@ -22,12 +23,22 @@ local log = ngx.log
 local DEBUG = ngx.DEBUG
 local randomseed = math.randomseed
 local ngx_time = ngx.time
+local unpack = unpack
 local setmetatable = setmetatable
 local type = type
 
 
-local DOT_CHAR = byte(".")
+local ok, new_tab = pcall(require, "table.new")
+if not ok then
+    new_tab = function (narr, nrec) return {} end
+end
 
+
+local DOT_CHAR = byte(".")
+local ZERO_CHAR = byte("0")
+local COLON_CHAR = byte(":")
+
+local IP6_ARPA = "ip6.arpa"
 
 local TYPE_A      = 1
 local TYPE_NS     = 2
@@ -67,6 +78,17 @@ local resolver_errstrs = {
 
 
 local mt = { __index = _M }
+
+
+local arpa_tmpl = new_tab(72, 0)
+
+for i = 1, #IP6_ARPA do
+    arpa_tmpl[64 + i] = byte(IP6_ARPA, i)
+end
+
+for i = 2, 64, 2 do
+    arpa_tmpl[i] = DOT_CHAR
+end
 
 
 function _M.new(class, opts)
@@ -794,6 +816,70 @@ function _M.compress_ipv6_addr(addr)
     end
 
     return addr
+end
+
+
+local function _expand_ipv6_addr(addr)
+    if find(addr, "::", 1, true) then
+        local ncol, addrlen = 8, #addr
+
+        for i = 1, addrlen do
+            if byte(addr, i) == COLON_CHAR then
+                ncol = ncol - 1
+            end
+        end
+
+        if byte(addr, 1) == COLON_CHAR then
+            addr = "0" .. addr
+        end
+
+        if byte(addr, -1) == COLON_CHAR then
+            addr = addr .. "0"
+        end
+
+        addr = re_sub(addr, "::", ":" .. rep("0:", ncol), "jo")
+    end
+
+    return addr
+end
+
+
+_M.expand_ipv6_addr = _expand_ipv6_addr
+
+
+function _M.arpa_str(addr)
+    if find(addr, ":", 1, true) then
+        addr = _expand_ipv6_addr(addr)
+        local idx, hidx, addrlen = 1, 1, #addr
+
+        for i = addrlen, 0, -1 do
+            local s = byte(addr, i)
+            if s == COLON_CHAR or not s then
+                for j = hidx, 4 do
+                    arpa_tmpl[idx] = ZERO_CHAR
+                    idx = idx + 2
+                end
+                hidx = 1
+            else
+                arpa_tmpl[idx] = s
+                idx = idx + 2
+                hidx = hidx + 1
+            end
+        end
+
+        addr = char(unpack(arpa_tmpl))
+    else
+        addr = re_sub(addr, [[(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})]],
+                      "$4.$3.$2.$1.in-addr.arpa", "ajo")
+    end
+
+    return addr
+end
+
+
+function _M.reverse_query(self, addr)
+    return self.query(self, self.arpa_str(addr),
+                      {qtype = self.TYPE_PTR})
 end
 
 
