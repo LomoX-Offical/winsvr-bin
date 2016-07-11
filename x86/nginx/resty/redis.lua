@@ -21,7 +21,7 @@ end
 
 
 local _M = new_tab(0, 155)
-_M._VERSION = '0.20'
+_M._VERSION = '0.24'
 
 
 local commands = {
@@ -210,7 +210,7 @@ local function _read_reply(self, sock)
             return null
         end
 
-        local vals = new_tab(n, 0);
+        local vals = new_tab(n, 0)
         local nvals = 0
         for i = 1, n do
             local res, err = _read_reply(self, sock)
@@ -240,7 +240,8 @@ local function _read_reply(self, sock)
         return false, sub(line, 2)
 
     else
-        return nil, "unkown prefix: \"" .. prefix .. "\""
+        -- when `line` is an empty string, `prefix` will be equal to nil.
+        return nil, "unkown prefix: \"" .. tostring(prefix) .. "\""
     end
 end
 
@@ -248,23 +249,23 @@ end
 local function _gen_req(args)
     local nargs = #args
 
-    local req = new_tab(nargs + 1, 0)
+    local req = new_tab(nargs * 5 + 1, 0)
     req[1] = "*" .. nargs .. "\r\n"
-    local nbits = 1
+    local nbits = 2
 
     for i = 1, nargs do
         local arg = args[i]
-        nbits = nbits + 1
-
-        if not arg then
-            req[nbits] = "$-1\r\n"
-
-        else
-            if type(arg) ~= "string" then
-                arg = tostring(arg)
-            end
-            req[nbits] = "$" .. #arg .. "\r\n" .. arg .. "\r\n"
+        if type(arg) ~= "string" then
+            arg = tostring(arg)
         end
+
+        req[nbits] = "$"
+        req[nbits + 1] = #arg
+        req[nbits + 2] = "\r\n"
+        req[nbits + 3] = arg
+        req[nbits + 4] = "\r\n"
+
+        nbits = nbits + 5
     end
 
     -- it is much faster to do string concatenation on the C land

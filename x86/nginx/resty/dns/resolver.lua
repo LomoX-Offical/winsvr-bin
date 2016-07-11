@@ -54,7 +54,7 @@ local CLASS_IN    = 1
 
 
 local _M = {
-    _VERSION    = '0.14',
+    _VERSION    = '0.16',
     TYPE_A      = TYPE_A,
     TYPE_NS     = TYPE_NS,
     TYPE_CNAME  = TYPE_CNAME,
@@ -335,7 +335,7 @@ local function parse_response(buf, id)
         return nil, "truncated"
     end
 
-    local code = band(flags, 0x7f)
+    local code = band(flags, 0xf)
 
     -- print(format("code: %d", code))
 
