@@ -1,2 +1,0 @@
-127.0.0.1 - - [13/Dec/2016:17:03:40 +0800] "GET /favicon.ico HTTP/1.1" 404 571 "-" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36"
-127.0.0.1 - - [13/Dec/2016:17:03:46 +0800] "GET /test HTTP/1.1" 404 571 "-" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36"

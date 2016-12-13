@@ -1,3 +1,0 @@
-2016/12/13 17:03:33 [notice] 5552#9940: using inherited sockets from "392;"
-2016/12/13 17:03:40 [error] 5552#11612: *1 CreateFile() "D:\winsvr-bin\x86\nginx/html/favicon.ico" failed (2: The system cannot find the file specified), client: 127.0.0.1, server: localhost, request: "GET /favicon.ico HTTP/1.1", host: "127.0.0.1"
-2016/12/13 17:03:46 [error] 5552#11612: *1 CreateFile() "D:\winsvr-bin\x86\nginx/html/test" failed (2: The system cannot find the file specified), client: 127.0.0.1, server: localhost, request: "GET /test HTTP/1.1", host: "127.0.0.1"
