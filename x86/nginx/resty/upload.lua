@@ -1,20 +1,19 @@
 -- Copyright (C) Yichun Zhang (agentzh)
 
 
-local sub = string.sub
+-- local sub = string.sub
 local req_socket = ngx.req.socket
-local null = ngx.null
 local match = string.match
 local setmetatable = setmetatable
-local error = error
-local get_headers = ngx.req.get_headers
 local type = type
+local ngx_var = ngx.var
 -- local print = print
 
 
-local _M = { _VERSION = '0.08' }
+local _M = { _VERSION = '0.10' }
 
 
+local CHUNK_SIZE = 4096
 local MAX_LINE_SIZE = 512
 
 local STATE_BEGIN = 1
@@ -29,7 +28,7 @@ local state_handlers
 
 
 local function get_boundary()
-    local header = get_headers()["content-type"]
+    local header = ngx_var.content_type
     if not header then
         return nil
     end
@@ -47,7 +46,7 @@ local function get_boundary()
 end
 
 
-function _M.new(self, chunk_size)
+function _M.new(self, chunk_size, max_line_size)
     local boundary = get_boundary()
 
     -- print("boundary: ", boundary)
@@ -75,7 +74,8 @@ function _M.new(self, chunk_size)
 
     return setmetatable({
         sock = sock,
-        size = chunk_size or 4096,
+        size = chunk_size or CHUNK_SIZE,
+        line_size = max_line_size or MAX_LINE_SIZE,
         read2boundary = read2boundary,
         read_line = read_line,
         boundary = boundary,
@@ -97,12 +97,12 @@ end
 local function discard_line(self)
     local read_line = self.read_line
 
-    local line, err = self.read_line(MAX_LINE_SIZE)
+    local line, err = read_line(self.line_size)
     if not line then
         return nil, err
     end
 
-    local dummy, err = self.read_line(1)
+    local dummy, err = read_line(1)
     if dummy then
         return nil, "line too long: " .. line .. dummy .. "..."
     end
@@ -172,7 +172,7 @@ end
 local function read_header(self)
     local read_line = self.read_line
 
-    local line, err = read_line(MAX_LINE_SIZE)
+    local line, err = read_line(self.line_size)
     if err then
         return nil, nil, err
     end
@@ -209,7 +209,7 @@ end
 
 
 function _M.read(self)
-    local size = self.size
+    -- local size = self.size
 
     local handler = state_handlers[self.state]
     if handler then
@@ -230,7 +230,7 @@ local function read_preamble(self)
     local read2boundary = self.read2boundary
 
     while true do
-        local preamble, err = read2boundary(size)
+        local preamble = read2boundary(size)
         if not preamble then
             break
         end
