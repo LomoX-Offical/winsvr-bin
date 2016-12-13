@@ -21,8 +21,6 @@ local re_sub = ngx.re.sub
 local tcp = ngx.socket.tcp
 local log = ngx.log
 local DEBUG = ngx.DEBUG
-local randomseed = math.randomseed
-local ngx_time = ngx.time
 local unpack = unpack
 local setmetatable = setmetatable
 local type = type
@@ -58,7 +56,7 @@ local SECTION_AR  = 3
 
 
 local _M = {
-    _VERSION    = '0.17',
+    _VERSION    = '0.18',
     TYPE_A      = TYPE_A,
     TYPE_NS     = TYPE_NS,
     TYPE_CNAME  = TYPE_CNAME,
@@ -407,7 +405,6 @@ local function parse_section(answers, section, buf, start_pos, size,
 
             local addr_bytes = { byte(buf, pos, pos + 15) }
             local flds = {}
-            local comp_begin, comp_end
             for i = 1, 16, 2 do
                 local a = addr_bytes[i]
                 local b = addr_bytes[i + 1]
@@ -946,9 +943,6 @@ function _M.reverse_query(self, addr)
     return self.query(self, self.arpa_str(addr),
                       {qtype = self.TYPE_PTR})
 end
-
-
-randomseed(ngx_time())
 
 
 return _M

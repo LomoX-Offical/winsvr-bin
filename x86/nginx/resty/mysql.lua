@@ -1,4 +1,4 @@
--- Copyright (C) 2012 Yichun Zhang (agentzh)
+-- Copyright (C) Yichun Zhang (agentzh)
 
 
 local bit = require "bit"
@@ -38,7 +38,7 @@ if not ok then
 end
 
 
-local _M = { _VERSION = '0.16' }
+local _M = { _VERSION = '0.17' }
 
 
 -- constants
@@ -286,14 +286,14 @@ local function _from_length_coded_bin(data, pos)
         return _get_byte8(data, pos)
     end
 
-    return false, pos + 1
+    return nil, pos + 1
 end
 
 
 local function _from_length_coded_str(data, pos)
     local len
     len, pos = _from_length_coded_bin(data, pos)
-    if len == nil or len == null then
+    if not len or len == null then
         return null, pos
     end
 

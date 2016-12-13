@@ -12,7 +12,8 @@ local bor = bit.bor
 local bxor = bit.bxor
 local lshift = bit.lshift
 local rshift = bit.rshift
-local tohex = bit.tohex
+--local tohex = bit.tohex
+local tostring = tostring
 local concat = table.concat
 local str_char = string.char
 local rand = math.random
@@ -31,7 +32,7 @@ end
 local _M = new_tab(0, 5)
 
 _M.new_tab = new_tab
-_M._VERSION = '0.05'
+_M._VERSION = '0.06'
 
 
 local types = {

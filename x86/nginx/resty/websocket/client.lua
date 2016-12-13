@@ -36,7 +36,7 @@ then
 end
 
 local _M = new_tab(0, 13)
-_M._VERSION = '0.05'
+_M._VERSION = '0.06'
 
 
 local mt = { __index = _M }
@@ -230,7 +230,7 @@ function _M.recv_frame(self)
 end
 
 
-local function send_frame(self, fin, opcode, payload, max_payload_len)
+local function send_frame(self, fin, opcode, payload)
     if self.fatal then
         return nil, "fatal error already happened"
     end
