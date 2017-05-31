@@ -29,7 +29,6 @@ ffi.cdef[[
 ]]
 
 local queue_arr_type = ffi.typeof("lrucache_queue_t[?]")
-local queue_ptr_type = ffi.typeof("lrucache_queue_t*")
 local queue_type = ffi.typeof("lrucache_queue_t")
 local NULL = ffi.null
 
@@ -114,7 +113,7 @@ end
 -- true module stuffs
 
 local _M = {
-    _VERSION = '0.04'
+    _VERSION = '0.06'
 }
 local mt = { __index = _M }
 
@@ -130,7 +129,6 @@ function _M.new(size)
     end
 
     local self = {
-        keys = {},
         hasht = {},
         free_queue = queue_init(size),
         cache_queue = queue_init(),
@@ -144,7 +142,7 @@ end
 function _M.get(self, key)
     local hasht = self.hasht
     local val = hasht[key]
-    if not val then
+    if val == nil then
         return nil
     end
 
